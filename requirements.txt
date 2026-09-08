@@ -1,0 +1,8 @@
+cryptography>=42.0
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+# Optional, for real post-quantum signatures. Requires the liboqs C library
+# to be built/installed first — see README "Building liboqs" section, or
+# just use `docker compose up` which builds it automatically.
+# git+https://github.com/open-quantum-safe/liboqs-python.git

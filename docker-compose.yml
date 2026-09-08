@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  pki-server:
+    build: .
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./certs:/app/certs
