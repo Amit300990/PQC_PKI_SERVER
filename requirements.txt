@@ -2,6 +2,10 @@ cryptography>=42.0
 fastapi>=0.110
 uvicorn[standard]>=0.29
 pydantic>=2.6
+SQLAlchemy>=2.0,<2.1
+# PostgreSQL support for PKI_DATABASE_URL / DATABASE_URL. SQLite needs no
+# additional driver and remains the default for local single-node deployments.
+psycopg[binary]>=3.1
 # Optional, for real post-quantum signatures. Requires the liboqs C library
 # to be built/installed first — see README "Building liboqs" section, or
 # just use `docker compose up` which builds it automatically.

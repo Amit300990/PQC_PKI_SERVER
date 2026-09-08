@@ -1,6 +1,10 @@
 certs/*.crt
 certs/*.key
 certs/*.json
+certs/*.db
+certs/*.db-*
+.env
+tests/.runtime/
 __pycache__/
 *.pyc
 .venv/

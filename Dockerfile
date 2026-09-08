@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=liboqs-builder /opt/liboqs /opt/liboqs
 ENV LD_LIBRARY_PATH=/opt/liboqs/lib
 ENV OQS_INSTALL_PATH=/opt/liboqs
+ENV PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 COPY requirements.txt .
@@ -38,6 +39,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # instead of letting it fetch/build its own copy at runtime.
 RUN pip install --no-cache-dir git+https://github.com/open-quantum-safe/liboqs-python.git
 
-COPY . .
+RUN addgroup --system --gid 10001 pki \
+    && adduser --system --uid 10001 --ingroup pki --no-create-home pki \
+    && install -d -o pki -g pki -m 0700 /app/certs
+
+COPY --chown=pki:pki . .
+USER pki
+
 EXPOSE 8443
 CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8443"]
