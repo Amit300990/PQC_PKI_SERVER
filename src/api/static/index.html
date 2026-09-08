@@ -1,0 +1,204 @@
+<!--
+THESIS: A customer certificate console that feels like a precise operating instrument, not a developer API explorer.
+OWN-WORLD: Ink-blue workspace, mineral gray structure, and a single electric-lime action color; compact system typography and certificate-paper details.
+STORY: Configure access, establish trust, issue identity, then monitor and revoke it without losing context.
+FIRST VIEWPORT: A persistent dark navigation rail anchors the workspace; the active issuance workspace and live certificate inventory share the bright main canvas.
+FORM: Operate-mode certificate desk, organized as an asymmetric two-column control surface with the inventory as the evidence field.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0d1524">
+    <title>Keyframe CA Console</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#workspace" aria-label="Keyframe CA Console home">
+          <span class="brand-mark" aria-hidden="true">K</span>
+          <span>Keyframe<span>CA</span></span>
+        </a>
+        <nav aria-label="Console navigation">
+          <a class="nav-link active" href="#workspace">Workspace</a>
+          <a class="nav-link" href="#certificates">Certificates</a>
+          <a class="nav-link" href="#trust">Trust &amp; CRL</a>
+        </nav>
+        <section class="connection-panel" aria-labelledby="connection-title">
+          <p id="connection-title">Connection</p>
+          <span class="status-dot" id="connection-dot"></span>
+          <strong id="connection-status">API key required</strong>
+          <button class="text-button" id="open-key-dialog">Configure access</button>
+        </section>
+        <p class="sidebar-note">Your access key is retained only for this browser session.</p>
+      </aside>
+
+      <main>
+        <header class="topbar">
+          <div>
+            <p class="page-context">Customer certificate workspace</p>
+            <h1>Trust, issued with intent.</h1>
+          </div>
+          <div class="topbar-actions">
+            <button class="button button-secondary" id="refresh-certificates">Refresh inventory</button>
+            <button class="button button-primary" id="open-key-dialog-top">API access</button>
+          </div>
+        </header>
+
+        <div id="notice" class="notice" role="status" hidden></div>
+
+        <section class="journey" aria-labelledby="journey-title">
+          <div>
+            <h2 id="journey-title">Your path to a working certificate</h2>
+            <p>Complete the next available step. The console keeps the important work in one place.</p>
+          </div>
+          <ol>
+            <li id="step-connect"><span>1</span><div><strong>Connect securely</strong><small>Add the API key for this session.</small></div></li>
+            <li id="step-initialize"><span>2</span><div><strong>Initialize the CA</strong><small>Create the root trust anchor once.</small></div></li>
+            <li id="step-issue"><span>3</span><div><strong>Issue an identity</strong><small>Download and deploy the certificate.</small></div></li>
+          </ol>
+        </section>
+
+        <section class="workspace-grid" id="workspace">
+          <section class="issuance-panel" aria-labelledby="issue-title">
+            <div class="section-heading">
+              <div>
+                <p class="section-label">New certificate</p>
+                <h2 id="issue-title">Issue an identity</h2>
+              </div>
+              <span class="pqc-badge" id="pqc-availability">Checking PQC</span>
+            </div>
+            <form id="issue-form">
+              <label>
+                Common name
+                <input name="common_name" type="text" placeholder="api.example.com" minlength="1" maxlength="64" required>
+              </label>
+              <label>
+                Subject alternative names
+                <textarea name="sans" rows="3" placeholder="api.example.com&#10;www.example.com&#10;192.0.2.10"></textarea>
+                <span>One DNS name or IP address per line.</span>
+              </label>
+              <div class="form-row">
+                <label>
+                  Validity
+                  <select name="valid_days">
+                    <option value="90">90 days</option>
+                    <option value="180">180 days</option>
+                    <option value="365">365 days</option>
+                    <option value="397" selected>397 days</option>
+                  </select>
+                </label>
+                <label class="toggle-label">
+                  <input name="enable_pqc" type="checkbox">
+                  <span class="toggle-control" aria-hidden="true"></span>
+                  <span>Attach PQC identity</span>
+                </label>
+              </div>
+              <button class="button button-primary button-wide" type="submit">Issue certificate</button>
+            </form>
+          </section>
+
+          <section class="ca-panel" id="trust" aria-labelledby="ca-title">
+            <p class="section-label">Certificate authority</p>
+            <h2 id="ca-title">Establish your trust anchor</h2>
+            <p>Initialize once for a new deployment. Replacing a CA invalidates previous certificate state.</p>
+            <form id="init-form">
+              <label>
+                Root CA common name
+                <input name="common_name" type="text" value="Hybrid PQC Root CA" maxlength="64" required>
+              </label>
+              <label class="checkbox-label">
+                <input name="force" type="checkbox">
+                <span>I understand this replaces the existing CA and clears certificate records.</span>
+              </label>
+              <button class="button button-danger button-wide" type="submit">Initialize CA</button>
+            </form>
+            <div class="crl-action">
+              <div>
+                <strong>Certificate revocation list</strong>
+                <span>Download the current signed CRL.</span>
+              </div>
+              <button class="button button-secondary" id="download-crl">Download CRL</button>
+            </div>
+          </section>
+        </section>
+
+        <section class="inventory" id="certificates" aria-labelledby="inventory-title">
+          <div class="section-heading inventory-heading">
+            <div>
+              <p class="section-label">Certificate inventory</p>
+              <h2 id="inventory-title">Issued identities</h2>
+            </div>
+            <div class="inventory-controls">
+              <label class="search-field">
+                <span class="visually-hidden">Search certificates</span>
+                <input id="certificate-search" type="search" placeholder="Search name or serial">
+              </label>
+              <span class="count-label" id="certificate-count">0 records</span>
+            </div>
+          </div>
+          <div class="filter-bar" role="group" aria-label="Certificate status filter">
+            <button class="filter-button active" data-filter="all">All certificates</button>
+            <button class="filter-button" data-filter="valid">Valid</button>
+            <button class="filter-button" data-filter="revoked">Revoked</button>
+          </div>
+          <div class="inventory-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Common name</th>
+                    <th scope="col">Serial</th>
+                    <th scope="col">PQC identity</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody id="certificate-list">
+                  <tr class="empty-row"><td colspan="5">Connect with an API key to load your issued certificates.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <aside class="certificate-detail" id="certificate-detail" aria-live="polite">
+              <p class="section-label">Certificate detail</p>
+              <h3>Select a certificate</h3>
+              <p>Choose an identity from the inventory to inspect its status, copy its serial number, or download its public artifacts.</p>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="key-dialog" aria-labelledby="key-dialog-title">
+      <form method="dialog" id="key-form">
+        <button class="dialog-close" value="cancel" aria-label="Close">×</button>
+        <p class="section-label">Secure connection</p>
+        <h2 id="key-dialog-title">Enter your API access key</h2>
+        <p>This key is sent only to this CA API and is cleared when this browser session ends.</p>
+        <label>
+          API key
+          <input id="api-key" type="password" autocomplete="off" required>
+        </label>
+        <div class="dialog-actions">
+          <button class="button button-secondary" value="cancel">Cancel</button>
+          <button class="button button-primary" value="default" type="submit">Connect</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="revoke-dialog" aria-labelledby="revoke-dialog-title">
+      <form method="dialog" id="revoke-form">
+        <p class="section-label">Irreversible action</p>
+        <h2 id="revoke-dialog-title">Revoke this certificate?</h2>
+        <p>Clients that check your CRL will no longer trust this certificate. This action cannot be undone.</p>
+        <p class="serial-confirm" id="revoke-serial"></p>
+        <div class="dialog-actions">
+          <button class="button button-secondary" value="cancel">Keep certificate</button>
+          <button class="button button-danger" id="confirm-revoke" value="default" type="submit">Revoke certificate</button>
+        </div>
+      </form>
+    </dialog>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
