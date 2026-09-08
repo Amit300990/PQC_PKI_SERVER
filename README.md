@@ -119,8 +119,9 @@ is on-the-wire size (TLS handshake bytes, cert chain size), not CPU time.
 ```
 src/
   ca/hybrid_ca.py    # core CA logic: root creation, leaf issuance, PQC hooks
-  api/main.py         # FastAPI REST layer
-certs/                # generated root cert/key (gitignored)
+  api/main.py         # FastAPI REST layer and customer console route
+  api/static/         # browser-based customer certificate console
+certs/                # generated CA material and certificate state (gitignored)
 ```
 
 ## Security note

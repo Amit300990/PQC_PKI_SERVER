@@ -25,6 +25,8 @@ from typing import Annotated, Any, Optional
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from src.ca.hybrid_ca import HybridCA, PQC_AVAILABLE
@@ -34,6 +36,7 @@ app = FastAPI(title="Hybrid PQC PKI Server", version="0.1.0")
 CA_CERT_PATH = "certs/root.crt"
 CA_KEY_PATH = "certs/root.key"
 ISSUED_STATE_PATH = "certs/issued.json"
+STATIC_DIR = Path(__file__).parent / "static"
 
 _ca: Optional[HybridCA] = None
 _issued: Optional[dict[int, dict[str, Any]]] = None
@@ -164,6 +167,20 @@ def get_cert(serial: int):
     return record
 
 
+@app.get("/certs", dependencies=[Depends(require_api_key)])
+def list_certs():
+    return [
+        {
+            "serial": serial,
+            "common_name": record["common_name"],
+            "status": record["status"],
+            "revoked_at": record["revoked_at"],
+            "has_pqc_identity": bool(record.get("pqc_identity_pem")),
+        }
+        for serial, record in get_issued().items()
+    ]
+
+
 @app.post("/certs/{serial}/revoke", dependencies=[Depends(require_api_key)])
 def revoke_cert(serial: int):
     issued = get_issued()
@@ -213,3 +230,11 @@ def verify_pqc(serial: int):
 @app.get("/health")
 def health():
     return {"status": "ok", "pqc_available": PQC_AVAILABLE}
+
+
+@app.get("/", include_in_schema=False)
+def customer_console():
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

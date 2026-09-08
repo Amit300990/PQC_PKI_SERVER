@@ -1,5 +1,6 @@
 certs/*.crt
 certs/*.key
+certs/*.json
 __pycache__/
 *.pyc
 .venv/
