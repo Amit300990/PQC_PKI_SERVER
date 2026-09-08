@@ -47,7 +47,7 @@ class IssuedCertBundle:
     """Everything produced by one issuance: classical cert, and optionally a PQC companion."""
     classical_cert_pem: bytes
     classical_key_pem: bytes
-    pqc_cert_pem: Optional[bytes] = None
+    pqc_identity_pem: Optional[bytes] = None
     pqc_public_key: Optional[bytes] = None
     pqc_algorithm: Optional[str] = None
 
@@ -94,7 +94,7 @@ class HybridCA:
             x509.NameAttribute(NameOID.COMMON_NAME, common_name),
         ])
 
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         cert = (
             x509.CertificateBuilder()
             .subject_name(subject)
@@ -133,12 +133,19 @@ class HybridCA:
         key_pem = Path(key_path).read_bytes()
         cert = x509.load_pem_x509_certificate(cert_pem)
         private_key = serialization.load_pem_private_key(key_pem, password=None)
+        if private_key.public_key().public_numbers() != cert.public_key().public_numbers():
+            raise ValueError("CA private key does not match the CA certificate.")
+        constraints = cert.extensions.get_extension_for_class(x509.BasicConstraints).value
+        if not constraints.ca:
+            raise ValueError("CA certificate does not have CA basic constraints.")
         return cls(cert, private_key, cert_pem, key_pem)
 
     def save(self, path_prefix: str) -> None:
         os.makedirs(os.path.dirname(path_prefix) or ".", exist_ok=True)
         Path(f"{path_prefix}.crt").write_bytes(self.cert_pem)
-        Path(f"{path_prefix}.key").write_bytes(self.key_pem)
+        key_path = Path(f"{path_prefix}.key")
+        key_path.write_bytes(self.key_pem)
+        os.chmod(key_path, 0o600)
 
     # ------------------------------------------------------------------ #
     # Issuance
@@ -161,7 +168,13 @@ class HybridCA:
         subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, common_name)])
         san_entries = [self._san_entry(s) for s in sans]
 
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
+        cert_not_after = min(
+            now + datetime.timedelta(days=valid_days),
+            self.cert.not_valid_after_utc,
+        )
+        if cert_not_after <= now:
+            raise ValueError("CA certificate has expired and cannot issue leaf certificates.")
         cert = (
             x509.CertificateBuilder()
             .subject_name(subject)
@@ -169,7 +182,7 @@ class HybridCA:
             .public_key(leaf_key.public_key())
             .serial_number(x509.random_serial_number())
             .not_valid_before(now)
-            .not_valid_after(now + datetime.timedelta(days=valid_days))
+            .not_valid_after(cert_not_after)
             .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
             .add_extension(x509.SubjectAlternativeName(san_entries), critical=False)
             .add_extension(
@@ -214,7 +227,7 @@ class HybridCA:
 
                 bundle.pqc_public_key = pqc_public_key
                 bundle.pqc_algorithm = pqc_algorithm
-                bundle.pqc_cert_pem = self._pack_pqc_envelope(
+                bundle.pqc_identity_pem = self._pack_pqc_envelope(
                     common_name, sans, pqc_public_key, signature, pqc_algorithm, now
                 )
 

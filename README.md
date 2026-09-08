@@ -1,8 +1,8 @@
 # Hybrid PQC PKI Server
 
 A minimal Certificate Authority + REST API that issues X.509 certificates
-today (classical ECDSA/RSA) with real post-quantum signatures (ML-DSA-65 /
-FIPS 204) as a companion identity, powered by
+today (classical ECDSA/RSA) with a real post-quantum signed identity
+envelope (ML-DSA-65 / FIPS 204), powered by
 [liboqs](https://github.com/open-quantum-safe/liboqs) (Open Quantum Safe).
 
 liboqs vendors [PQClean's](https://github.com/PQClean/PQClean) reference
@@ -15,18 +15,21 @@ X.509 doesn't yet have a finalized standard for embedding two signature
 algorithms in one certificate. Real-world PQC migrations today use one of:
 
 1. **Dual certificates** — issue a classical cert and a PQC cert for the same
-   identity; peers negotiate which one they can verify. *(this repo's approach)*
+   identity; peers negotiate which one they can verify.
 2. **Composite signatures** — draft IETF schemes combining classical + PQC
    into one signature field (not yet standardized).
 
-This project implements approach 1 so you can experiment safely without
-waiting on standards to settle.
+This project issues the classical X.509 certificate plus an application-specific
+PQC signed identity envelope. The envelope demonstrates ML-DSA signatures but
+is not an X.509 certificate and cannot be used for TLS negotiation. It can be
+replaced with a standards-based PQC certificate once client and library support
+is available.
 
 ## Features
 
 - [x] Self-signed root CA (RSA-4096, SHA-384)
 - [x] Leaf certificate issuance (ECDSA P-384) with SAN support
-- [x] Real PQC companion identity (ML-DSA-65, via liboqs/PQClean) per cert
+- [x] PQC signed identity envelope (ML-DSA-65, via liboqs/PQClean) per cert
 - [x] PQC signature verification + tamper detection
 - [x] REST API: init, issue, fetch, revoke, CRL, verify-pqc
 - [x] Benchmark suite: classical vs PQC size/speed (see below)
@@ -39,6 +42,7 @@ waiting on standards to settle.
 ### Option A — Docker (recommended, builds liboqs automatically)
 
 ```bash
+export PKI_API_KEY='replace-with-a-long-random-secret'
 docker compose up --build
 ```
 
@@ -70,21 +74,26 @@ when issuing certs and everything works in classical-only mode.
 ## Quick start
 
 ```bash
-# 1. Initialize the root CA
-curl -X POST localhost:8443/ca/init
+# 1. Set the API key used to protect all CA operations
+export PKI_API_KEY='replace-with-a-long-random-secret'
 
-# 2. Issue a hybrid certificate
-curl -X POST localhost:8443/certs/issue -H "Content-Type: application/json" -d '{
+# 2. Initialize the root CA
+curl -X POST localhost:8443/ca/init -H "X-API-Key: $PKI_API_KEY"
+
+# 3. Issue a certificate with an optional PQC identity envelope
+curl -X POST localhost:8443/certs/issue \
+  -H "X-API-Key: $PKI_API_KEY" \
+  -H "Content-Type: application/json" -d '{
   "common_name": "api.example.com",
   "sans": ["api.example.com"],
   "enable_pqc": true
 }'
 
-# 3. Verify the PQC identity for an issued cert
-curl -X POST localhost:8443/certs/<serial>/verify-pqc
+# 4. Verify the PQC identity envelope for an issued cert
+curl -X POST localhost:8443/certs/<serial>/verify-pqc -H "X-API-Key: $PKI_API_KEY"
 
-# 4. Check the CRL
-curl localhost:8443/crl
+# 5. Check the CRL
+curl localhost:8443/crl -H "X-API-Key: $PKI_API_KEY"
 ```
 
 ## Benchmark: classical vs post-quantum
@@ -118,7 +127,7 @@ certs/                # generated root cert/key (gitignored)
 
 This is a **learning/demo project**, not a production CA. Before using
 anything like this for real traffic: move key storage to an HSM or KMS,
-add auth to the API, add proper OCSP, and get the design reviewed.
+add proper OCSP, and get the design reviewed.
 
 ## License
 

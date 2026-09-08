@@ -4,5 +4,7 @@ services:
     build: .
     ports:
       - "8443:8443"
+    environment:
+      PKI_API_KEY: ${PKI_API_KEY:?Set PKI_API_KEY in your environment}
     volumes:
       - ./certs:/app/certs
