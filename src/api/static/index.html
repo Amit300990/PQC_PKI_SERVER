@@ -72,13 +72,9 @@ FORM: Operate-mode certificate desk, organized as an asymmetric two-column contr
             </div>
             <form id="issue-form">
               <label>
-                Common name
-                <input name="common_name" type="text" placeholder="api.example.com" minlength="1" maxlength="64" required>
-              </label>
-              <label>
-                Subject alternative names
-                <textarea name="sans" rows="3" placeholder="api.example.com&#10;www.example.com&#10;192.0.2.10"></textarea>
-                <span>One DNS name or IP address per line.</span>
+                Certificate signing request (PEM)
+                <textarea name="csr_pem" rows="10" spellcheck="false" placeholder="-----BEGIN CERTIFICATE REQUEST-----&#10;...&#10;-----END CERTIFICATE REQUEST-----" required></textarea>
+                <span>Generate the key pair on your device. The CA uses the CSR subject and DNS/IP SANs and never receives your private key.</span>
               </label>
               <div class="form-row">
                 <label>
@@ -96,7 +92,7 @@ FORM: Operate-mode certificate desk, organized as an asymmetric two-column contr
                   <span>Attach PQC identity</span>
                 </label>
               </div>
-              <button class="button button-primary button-wide" type="submit">Issue certificate</button>
+              <button class="button button-primary button-wide" type="submit">Issue from CSR</button>
             </form>
           </section>
 

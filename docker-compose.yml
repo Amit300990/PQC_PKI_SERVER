@@ -1,10 +1,22 @@
-version: "3.8"
 services:
   pki-server:
     build: .
+    init: true
+    restart: unless-stopped
     ports:
-      - "8443:8443"
+      - "127.0.0.1:8443:8443"
     environment:
-      PKI_API_KEY: ${PKI_API_KEY:?Set PKI_API_KEY in your environment}
+      PKI_ADMIN_API_TOKEN: ${PKI_ADMIN_API_TOKEN:?Set PKI_ADMIN_API_TOKEN in your environment}
+      PKI_OPERATOR_API_TOKEN: ${PKI_OPERATOR_API_TOKEN:?Set PKI_OPERATOR_API_TOKEN in your environment}
+      PKI_AUDITOR_API_TOKEN: ${PKI_AUDITOR_API_TOKEN:?Set PKI_AUDITOR_API_TOKEN in your environment}
+      PKI_DATABASE_URL: ${PKI_DATABASE_URL:-sqlite:////app/certs/pki.db}
+      PKI_CA_CERT_PATH: /app/certs/root.crt
+      PKI_CA_KEY_PATH: /app/certs/root.key
     volumes:
       - ./certs:/app/certs
+    user: "${PKI_UID:-10001}:${PKI_GID:-10001}"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

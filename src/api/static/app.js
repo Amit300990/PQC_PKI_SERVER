@@ -21,6 +21,10 @@ function showNotice(message, isError = false) {
   notice.hidden = false;
 }
 
+function artifactName(commonName) {
+  return commonName.replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 64) || "certificate";
+}
+
 function setConnection(connected) {
   connectionStatus.textContent = connected ? "Connected to CA API" : "API key required";
   connectionDot.classList.toggle("connected", connected);
@@ -73,7 +77,7 @@ function renderCertificates(records) {
     return;
   }
   certificateList.innerHTML = visibleRecords
-    .sort((left, right) => right.serial - left.serial)
+    .sort((left, right) => `${right.issued_at}`.localeCompare(`${left.issued_at}`) || `${right.serial}`.localeCompare(`${left.serial}`))
     .map((record) => `
       <tr>
         <td>${escapeHtml(record.common_name)}</td>
@@ -153,10 +157,8 @@ document.querySelector("#key-form").addEventListener("submit", (event) => {
 document.querySelector("#issue-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
-  const sans = form.get("sans").split("\n").map((value) => value.trim()).filter(Boolean);
   const payload = {
-    common_name: form.get("common_name").trim(),
-    sans,
+    csr_pem: form.get("csr_pem").trim(),
     valid_days: Number(form.get("valid_days")),
     enable_pqc: form.get("enable_pqc") === "on",
   };
@@ -169,10 +171,10 @@ document.querySelector("#issue-form").addEventListener("submit", async (event) =
       body: JSON.stringify(payload),
     });
     const certificate = await response.json();
-    download(certificate.classical_cert_pem, `${payload.common_name}.crt`);
-    download(certificate.classical_key_pem, `${payload.common_name}.key`);
-    if (certificate.pqc_identity_pem) download(certificate.pqc_identity_pem, `${payload.common_name}.pqc-identity.pem`);
-    showNotice("Certificate issued. Your certificate and private key downloads have started.");
+    const filename = artifactName(certificate.common_name);
+    download(certificate.classical_cert_pem, `${filename}.crt`);
+    if (certificate.pqc_identity_pem) download(certificate.pqc_identity_pem, `${filename}.pqc-identity.pem`);
+    showNotice("Certificate issued. Certificate artifact downloads have started; your private key remains on your device.");
     event.currentTarget.reset();
     refreshCertificates();
   } catch (error) {
@@ -240,8 +242,9 @@ certificateList.addEventListener("click", async (event) => {
       return;
     }
     const record = await (await request(`/certs/${serial}`)).json();
-    download(record.classical_cert_pem, `${record.common_name}.crt`);
-    if (record.pqc_identity_pem) download(record.pqc_identity_pem, `${record.common_name}.pqc-identity.pem`);
+    const filename = artifactName(record.common_name);
+    download(record.classical_cert_pem, `${filename}.crt`);
+    if (record.pqc_identity_pem) download(record.pqc_identity_pem, `${filename}.pqc-identity.pem`);
     showNotice("Certificate download started.");
   } catch (error) {
     showNotice(error.message, true);
@@ -280,8 +283,9 @@ certificateDetail.addEventListener("click", async (event) => {
   }
   try {
     const fullRecord = await (await request(`/certs/${record.serial}`)).json();
-    download(fullRecord.classical_cert_pem, `${fullRecord.common_name}.crt`);
-    if (fullRecord.pqc_identity_pem) download(fullRecord.pqc_identity_pem, `${fullRecord.common_name}.pqc-identity.pem`);
+    const filename = artifactName(fullRecord.common_name);
+    download(fullRecord.classical_cert_pem, `${filename}.crt`);
+    if (fullRecord.pqc_identity_pem) download(fullRecord.pqc_identity_pem, `${filename}.pqc-identity.pem`);
     showNotice("Certificate download started.");
   } catch (error) {
     showNotice(error.message, true);
