@@ -47,6 +47,7 @@ h2 { margin-bottom: 0; font-size: 1.35rem; letter-spacing: -.035em; }
 .topbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .button { min-height: 40px; border: 1px solid transparent; padding: 0 15px; border-radius: 7px; font-size: .84rem; font-weight: 720; transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease; }
 .button:hover { transform: translateY(-1px); }
+.button:disabled { cursor: wait; opacity: .58; transform: none; }
 .button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, .text-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--lime) 72%, white); outline-offset: 2px; }
 .button-primary { color: #172500; background: var(--lime); }
 .button-primary:hover { background: #cbfa5e; }
@@ -57,6 +58,19 @@ h2 { margin-bottom: 0; font-size: 1.35rem; letter-spacing: -.035em; }
 .button-wide { width: 100%; margin-top: 22px; }
 .notice { margin: 28px 0 -3px; padding: 13px 15px; border-radius: 7px; background: #eaf6e8; color: #15553c; font-size: .87rem; }
 .notice.error { background: var(--danger-soft); color: #822b2b; }
+
+.journey { display: flex; align-items: end; justify-content: space-between; gap: 32px; margin-top: 38px; padding: 24px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.journey h2 { font-size: 1.05rem; }
+.journey > div > p { max-width: 44ch; margin: 8px 0 0; color: var(--muted); font-size: .84rem; line-height: 1.45; }
+.journey ol { display: flex; gap: 20px; padding: 0; margin: 0; list-style: none; }
+.journey li { display: flex; align-items: center; gap: 9px; min-width: 145px; color: #808a81; }
+.journey li > span { display: grid; width: 24px; height: 24px; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-size: .7rem; font-weight: 760; }
+.journey strong, .journey small { display: block; }
+.journey strong { font-size: .76rem; }
+.journey small { margin-top: 2px; font-size: .68rem; line-height: 1.25; }
+.journey li.complete { color: var(--success); }
+.journey li.current { color: var(--ink); }
+.journey li.current > span { color: var(--ink); background: var(--lime); border-color: var(--lime); }
 
 .workspace-grid { display: grid; grid-template-columns: minmax(0, 1.16fr) minmax(315px, .84fr); gap: 20px; margin-top: 52px; }
 .issuance-panel, .ca-panel, .inventory { background: var(--panel); border: 1px solid var(--line); }
@@ -88,8 +102,15 @@ textarea { resize: vertical; line-height: 1.45; }
 .crl-action span { margin-top: 3px; color: var(--muted); font-size: .74rem; }
 
 .inventory { margin-top: 20px; padding: 30px clamp(18px, 3vw, 38px) 14px; }
+.inventory-controls { display: flex; align-items: center; gap: 10px; }
+.search-field { margin: 0; }
+.search-field input { min-height: 32px; width: 205px; padding: 6px 10px; font-size: .75rem; }
 .count-label { color: #566057; background: #edf0eb; }
-.table-wrap { overflow-x: auto; margin-top: 26px; }
+.filter-bar { display: flex; gap: 6px; margin-top: 22px; }
+.filter-button { border: 0; padding: 6px 9px; border-radius: 5px; color: var(--muted); background: transparent; font-size: .74rem; }
+.filter-button:hover, .filter-button:focus-visible, .filter-button.active { color: var(--ink); background: #e8ece6; outline: none; }
+.inventory-body { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 24px; align-items: start; }
+.table-wrap { overflow-x: auto; margin-top: 14px; }
 table { width: 100%; border-collapse: collapse; min-width: 680px; text-align: left; }
 th { padding: 0 12px 11px; color: var(--muted); font-size: .67rem; text-transform: uppercase; letter-spacing: .08em; }
 td { padding: 16px 12px; border-top: 1px solid #e3e7e1; font-size: .84rem; }
@@ -98,6 +119,15 @@ td:first-child { font-weight: 700; }
 .table-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .table-actions .button { min-height: 32px; padding: 0 10px; font-size: .72rem; }
 .empty-row td { padding: 36px 12px; color: var(--muted); text-align: center; font-weight: 450; }
+.certificate-detail { min-height: 212px; margin-top: 14px; padding: 20px; background: #f0f3ee; border-radius: 8px; }
+.certificate-detail h3 { margin: 0 0 9px; font-size: .98rem; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.certificate-detail > p:not(.section-label) { margin-bottom: 0; color: var(--muted); font-size: .77rem; line-height: 1.5; }
+.detail-list { display: grid; gap: 10px; padding: 0; margin: 18px 0; list-style: none; }
+.detail-list li { display: flex; justify-content: space-between; gap: 12px; font-size: .74rem; }
+.detail-list span { color: var(--muted); }
+.detail-list code { max-width: 118px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .67rem; }
+.detail-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.detail-actions .button { min-height: 32px; padding: 0 9px; font-size: .71rem; }
 
 dialog { width: min(450px, calc(100% - 32px)); padding: 0; border: 0; border-radius: var(--radius); color: var(--ink); box-shadow: 0 20px 70px rgba(13, 21, 36, .28); }
 dialog::backdrop { background: rgba(13, 21, 36, .56); }
@@ -106,6 +136,7 @@ dialog h2 { margin-bottom: 12px; }
 dialog p:not(.section-label) { color: var(--muted); font-size: .88rem; line-height: 1.5; }
 .dialog-close { position: absolute; top: 14px; right: 16px; border: 0; background: transparent; color: var(--muted); font-size: 1.5rem; }
 .dialog-actions { margin-top: 26px; justify-content: flex-end; }
+.serial-confirm { padding: 10px; color: #58635a; background: #f0f3ee; border-radius: 5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .75rem; overflow-wrap: anywhere; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
 @media (max-width: 900px) {
@@ -123,6 +154,13 @@ dialog p:not(.section-label) { color: var(--muted); font-size: .88rem; line-heig
   .topbar-actions { width: 100%; }
   .topbar-actions .button { flex: 1; }
   .workspace-grid, .form-row { grid-template-columns: 1fr; }
+  .journey { align-items: flex-start; flex-direction: column; }
+  .journey ol { width: 100%; overflow-x: auto; padding-bottom: 4px; }
+  .inventory-controls { width: 100%; justify-content: space-between; }
+  .search-field { flex: 1; }
+  .search-field input { width: 100%; }
+  .inventory-body { grid-template-columns: 1fr; }
+  .certificate-detail { margin-top: 0; }
   .toggle-label { padding-top: 0; }
   main { padding: 28px 16px 40px; }
   .issuance-panel, .ca-panel { padding: 24px 20px; }

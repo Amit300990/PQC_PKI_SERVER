@@ -49,6 +49,18 @@ FORM: Operate-mode certificate desk, organized as an asymmetric two-column contr
 
         <div id="notice" class="notice" role="status" hidden></div>
 
+        <section class="journey" aria-labelledby="journey-title">
+          <div>
+            <h2 id="journey-title">Your path to a working certificate</h2>
+            <p>Complete the next available step. The console keeps the important work in one place.</p>
+          </div>
+          <ol>
+            <li id="step-connect"><span>1</span><div><strong>Connect securely</strong><small>Add the API key for this session.</small></div></li>
+            <li id="step-initialize"><span>2</span><div><strong>Initialize the CA</strong><small>Create the root trust anchor once.</small></div></li>
+            <li id="step-issue"><span>3</span><div><strong>Issue an identity</strong><small>Download and deploy the certificate.</small></div></li>
+          </ol>
+        </section>
+
         <section class="workspace-grid" id="workspace">
           <section class="issuance-panel" aria-labelledby="issue-title">
             <div class="section-heading">
@@ -119,23 +131,41 @@ FORM: Operate-mode certificate desk, organized as an asymmetric two-column contr
               <p class="section-label">Certificate inventory</p>
               <h2 id="inventory-title">Issued identities</h2>
             </div>
-            <span class="count-label" id="certificate-count">0 records</span>
+            <div class="inventory-controls">
+              <label class="search-field">
+                <span class="visually-hidden">Search certificates</span>
+                <input id="certificate-search" type="search" placeholder="Search name or serial">
+              </label>
+              <span class="count-label" id="certificate-count">0 records</span>
+            </div>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Common name</th>
-                  <th scope="col">Serial</th>
-                  <th scope="col">PQC identity</th>
-                  <th scope="col">Status</th>
-                  <th scope="col"><span class="visually-hidden">Actions</span></th>
-                </tr>
-              </thead>
-              <tbody id="certificate-list">
-                <tr class="empty-row"><td colspan="5">Connect with an API key to load your issued certificates.</td></tr>
-              </tbody>
-            </table>
+          <div class="filter-bar" role="group" aria-label="Certificate status filter">
+            <button class="filter-button active" data-filter="all">All certificates</button>
+            <button class="filter-button" data-filter="valid">Valid</button>
+            <button class="filter-button" data-filter="revoked">Revoked</button>
+          </div>
+          <div class="inventory-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Common name</th>
+                    <th scope="col">Serial</th>
+                    <th scope="col">PQC identity</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody id="certificate-list">
+                  <tr class="empty-row"><td colspan="5">Connect with an API key to load your issued certificates.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <aside class="certificate-detail" id="certificate-detail" aria-live="polite">
+              <p class="section-label">Certificate detail</p>
+              <h3>Select a certificate</h3>
+              <p>Choose an identity from the inventory to inspect its status, copy its serial number, or download its public artifacts.</p>
+            </aside>
           </div>
         </section>
       </main>
@@ -154,6 +184,18 @@ FORM: Operate-mode certificate desk, organized as an asymmetric two-column contr
         <div class="dialog-actions">
           <button class="button button-secondary" value="cancel">Cancel</button>
           <button class="button button-primary" value="default" type="submit">Connect</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="revoke-dialog" aria-labelledby="revoke-dialog-title">
+      <form method="dialog" id="revoke-form">
+        <p class="section-label">Irreversible action</p>
+        <h2 id="revoke-dialog-title">Revoke this certificate?</h2>
+        <p>Clients that check your CRL will no longer trust this certificate. This action cannot be undone.</p>
+        <p class="serial-confirm" id="revoke-serial"></p>
+        <div class="dialog-actions">
+          <button class="button button-secondary" value="cancel">Keep certificate</button>
+          <button class="button button-danger" id="confirm-revoke" value="default" type="submit">Revoke certificate</button>
         </div>
       </form>
     </dialog>

@@ -229,7 +229,11 @@ def verify_pqc(serial: int):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "pqc_available": PQC_AVAILABLE}
+    return {
+        "status": "ok",
+        "pqc_available": PQC_AVAILABLE,
+        "ca_initialized": Path(CA_CERT_PATH).exists() and Path(CA_KEY_PATH).exists(),
+    }
 
 
 @app.get("/", include_in_schema=False)
